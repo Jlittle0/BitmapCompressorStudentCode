@@ -23,7 +23,7 @@
  *  @author Robert Sedgewick
  *  @author Kevin Wayne
  *  @author Zach Blick
- *  @author YOUR NAME HERE
+ *  @author Josh Little
  */
 public class BitmapCompressor {
 
@@ -31,11 +31,31 @@ public class BitmapCompressor {
      * Reads a sequence of bits from standard input, compresses them,
      * and writes the results to standard output.
      */
+    // Will find the average eventually and change this but currently a static value
+    public static final int BITS_PER_CHUNK = 16;
+
     public static void compress() {
 
         // TODO: complete compress()
-
-        BinaryStdOut.close();
+        // Take in at most two bytes of data each time and compress it into the number of
+//        String s = BinaryStdIn.readString();
+//        int n = s.length();
+//        double averageBits = findAverage(s);
+//        BinaryStdOut.write(averageBits);
+//        BinaryStdOut.write(BITS_PER_CHUNK + 1);
+//        // Write out each character
+//        int currentNum;
+//        int count;
+//        while (!s.isEmpty()) {
+//            count = 0;
+//            currentNum = s.charAt(0);
+//            while (s.charAt(count) == currentNum) {
+//                count++;
+//            }
+//            BinaryStdOut.write(count, log2(BITS_PER_CHUNK));
+//            s = s.substring(count);
+//        }
+//        BinaryStdOut.close();
     }
 
     /**
@@ -45,8 +65,32 @@ public class BitmapCompressor {
     public static void expand() {
 
         // TODO: complete expand()
+    }
 
-        BinaryStdOut.close();
+    public static double findAverage(String s) {
+        int totalLength = 0;
+        int segments = 0;
+        int count;
+        int currentNum;
+        while (!s.isEmpty()) {
+            count = 0;
+            currentNum = s.charAt(0);
+            while (s.charAt(count) == currentNum) {
+                count++;
+            }
+            totalLength += (count);
+            segments++;
+            s = s.substring(count);
+        }
+        return (double)totalLength / segments;
+    }
+
+    // Method taken from elsewhere for testing purposes
+    public static int countUsedBits(int z) {
+        if (z == 0) {
+            return 0;
+        }
+        return countUsedBits(z >>> 1) + 1;
     }
 
     /**
