@@ -16,6 +16,8 @@
  *  1240 bits
  ******************************************************************************/
 
+import java.util.Currency;
+
 /**
  *  The {@code BitmapCompressor} class provides static methods for compressing
  *  and expanding a binary bitmap input.
@@ -31,31 +33,41 @@ public class BitmapCompressor {
      * Reads a sequence of bits from standard input, compresses them,
      * and writes the results to standard output.
      */
-    // Will find the average eventually and change this but currently a static value
-    public static final int BITS_PER_CHUNK = 16;
 
     public static void compress() {
 
-        // TODO: complete compress()
-        // Take in at most two bytes of data each time and compress it into the number of
-//        String s = BinaryStdIn.readString();
-//        int n = s.length();
-//        double averageBits = findAverage(s);
-//        BinaryStdOut.write(averageBits);
-//        BinaryStdOut.write(BITS_PER_CHUNK + 1);
-//        // Write out each character
-//        int currentNum;
-//        int count;
-//        while (!s.isEmpty()) {
-//            count = 0;
-//            currentNum = s.charAt(0);
-//            while (s.charAt(count) == currentNum) {
-//                count++;
-//            }
-//            BinaryStdOut.write(count, log2(BITS_PER_CHUNK));
-//            s = s.substring(count);
-//        }
-//        BinaryStdOut.close();
+        String s = BinaryStdIn.readString();
+        int n = s.length();
+        // Find the average run length for the given string and then ceiling that.
+        double average = findAverage(s);
+        int roundedAverage = (int)Math.ceil(average);
+        int optimalBits = countUsedBits(roundedAverage - 1);
+        int maxIntegerForBits = (int)Math.pow(2, optimalBits);
+
+        // Writes out the number of bits that should be read in for each chunk in header as int.
+        BinaryStdOut.write(optimalBits);
+        BinaryStdOut.write(n);
+
+//         Write out each character
+        int currentNum;
+        int count;
+       while (!s.isEmpty()) {
+            count = 0;
+            currentNum = s.charAt(0);
+            while (count < s.length() && s.charAt(count) == currentNum && count < maxIntegerForBits) {
+                count++;
+            }
+            // Mod by the max value for that number of bits to allow the largest power of 2 be all zeros.
+           if (count != 0) {
+               BinaryStdOut.write(count % maxIntegerForBits, optimalBits);
+               if (currentNum == 0 || currentNum == 1)
+                    BinaryStdOut.write(currentNum, 1);
+               s = s.substring(count);
+           }
+           else
+               s = s.substring(1);
+        }
+        BinaryStdOut.close();
     }
 
     /**
@@ -64,21 +76,32 @@ public class BitmapCompressor {
      */
     public static void expand() {
 
-        // TODO: complete expand()
+        int metaBits = BinaryStdIn.readInt();
+        int metaLength = BinaryStdIn.readInt();
+        int temp = 0;
+
+        while (!BinaryStdIn.isEmpty() && temp < metaLength) {
+            int runLength = BinaryStdIn.readInt(metaBits);
+            int runNum = BinaryStdIn.readInt(1);
+            for (int i = 0; i < runLength; i++)
+                BinaryStdOut.write(runNum, 1);
+            temp += runLength;
+        }
+
+        BinaryStdOut.close();
     }
 
     public static double findAverage(String s) {
-        int totalLength = 0;
+        int totalLength = s.length();
         int segments = 0;
         int count;
         int currentNum;
         while (!s.isEmpty()) {
             count = 0;
             currentNum = s.charAt(0);
-            while (s.charAt(count) == currentNum) {
+            while (count < s.length() && s.charAt(count) == currentNum) {
                 count++;
             }
-            totalLength += (count);
             segments++;
             s = s.substring(count);
         }
