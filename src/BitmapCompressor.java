@@ -16,6 +16,8 @@
  *  1240 bits
  ******************************************************************************/
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Currency;
 
 /**
@@ -35,38 +37,34 @@ public class BitmapCompressor {
      */
 
     public static void compress() {
+        int optimalBits = 8;
+        int maxLength  = 255;
 
-        String s = BinaryStdIn.readString();
-        int n = s.length();
-        // Find the average run length for the given string and then ceiling that.
-        double average = findAverage(s);
-        int roundedAverage = (int)Math.ceil(average);
-        int optimalBits = countUsedBits(roundedAverage - 1);
-        int maxIntegerForBits = (int)Math.pow(2, optimalBits);
+        int currentBit;
+        int currentNum = 0;
+        int count = 0;
 
-        // Writes out the number of bits that should be read in for each chunk in header as int.
-        BinaryStdOut.write(optimalBits);
-        BinaryStdOut.write(n);
-
-//         Write out each character
-        int currentNum;
-        int count;
-       while (!s.isEmpty()) {
-            count = 0;
-            currentNum = s.charAt(0);
-            while (count < s.length() && s.charAt(count) == currentNum && count < maxIntegerForBits) {
+        while (!BinaryStdIn.isEmpty()) {
+            // Get the current/next bit
+            currentBit = BinaryStdIn.readInt(1);
+            // If that bit matches the current string and doesn't go over max, increase count
+            if (currentBit == currentNum && count < maxLength) {
                 count++;
+            } else {
+                // If the above conditions aren't met, write out current run and reset count
+                BinaryStdOut.write(count, optimalBits);
+                count = 0;
+                // If current run stopped because of a mismatch, change currentNum to 0 or 1;
+                if (currentBit != currentNum)
+                    currentNum = (currentNum + 1) % 2;
+                // If the current run stopped because the max length was reached, don't swap
+                // and instead write out 8 blank bits of 0s.
+                else
+                    BinaryStdOut.write(0, optimalBits);
             }
-            // Mod by the max value for that number of bits to allow the largest power of 2 be all zeros.
-           if (count != 0) {
-               BinaryStdOut.write(count % maxIntegerForBits, optimalBits);
-               if (currentNum == 0 || currentNum == 1)
-                    BinaryStdOut.write(currentNum, 1);
-               s = s.substring(count);
-           }
-           else
-               s = s.substring(1);
         }
+        // Write out the remaining bits
+        BinaryStdOut.write(count, optimalBits);
         BinaryStdOut.close();
     }
 
@@ -75,45 +73,20 @@ public class BitmapCompressor {
      * and writes the results to standard output.
      */
     public static void expand() {
-
-        int metaBits = BinaryStdIn.readInt();
-        int metaLength = BinaryStdIn.readInt();
-        int temp = 0;
-
-        while (!BinaryStdIn.isEmpty() && temp < metaLength) {
-            int runLength = BinaryStdIn.readInt(metaBits);
-            int runNum = BinaryStdIn.readInt(1);
-            for (int i = 0; i < runLength; i++)
-                BinaryStdOut.write(runNum, 1);
-            temp += runLength;
-        }
-
-        BinaryStdOut.close();
-    }
-
-    public static double findAverage(String s) {
-        int totalLength = s.length();
-        int segments = 0;
-        int count;
-        int currentNum;
-        while (!s.isEmpty()) {
-            count = 0;
-            currentNum = s.charAt(0);
-            while (count < s.length() && s.charAt(count) == currentNum) {
-                count++;
+        int currentBit = 0;
+        // As long as there are bits to read... (everything should be multiple of 8)
+        while (!BinaryStdIn.isEmpty()) {
+            // Read 8 bits at a time
+            int seqLength = BinaryStdIn.readInt(8);
+            // Print the string of bits
+            for (int i = 0; i < seqLength; i++){
+                BinaryStdOut.write(currentBit, 1);
             }
-            segments++;
-            s = s.substring(count);
+            // Iterate from 0 to 1 or 1 to 0 for the currentBit that should be checked for.
+            currentBit = (currentBit + 1) % 2;
         }
-        return (double)totalLength / segments;
-    }
-
-    // Method taken from elsewhere for testing purposes
-    public static int countUsedBits(int z) {
-        if (z == 0) {
-            return 0;
-        }
-        return countUsedBits(z >>> 1) + 1;
+        // Close the file.
+        BinaryStdOut.close();
     }
 
     /**

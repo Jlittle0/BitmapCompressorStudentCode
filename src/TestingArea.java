@@ -27,10 +27,13 @@ public class TestingArea {
     public static void main(String[] args) {
         int num = 4;
 
+        System.out.println(1 << 8);
+
         double average = findAverage("0000000000000000000000000000000011111100000000000000000011110000000000000000000011111111110000001111111100000000000000000000111100000000000000000011110000000000000");
         System.out.println(average);
         int map = (int)Math.ceil(average);
         System.out.println(map + " | " + countUsedBits(map - 1));
+
 
     }
 
