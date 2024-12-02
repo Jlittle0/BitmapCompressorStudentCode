@@ -37,6 +37,7 @@ public class BitmapCompressor {
      */
 
     public static void compress() {
+        // Decided to just use 8 bits and 255 since that's the largest representable number.
         int optimalBits = 8;
         int maxLength  = 255;
 
@@ -55,11 +56,13 @@ public class BitmapCompressor {
                 BinaryStdOut.write(count, optimalBits);
                 count = 0;
                 // If current run stopped because of a mismatch, change currentNum to 0 or 1;
-                if (currentBit != currentNum)
+                if (currentBit != currentNum) {
                     currentNum = (currentNum + 1) % 2;
+                    count++;
+                }
                 // If the current run stopped because the max length was reached, don't swap
                 // and instead write out 8 blank bits of 0s.
-                else
+                if (currentBit == currentNum && count == maxLength)
                     BinaryStdOut.write(0, optimalBits);
             }
         }
@@ -67,6 +70,7 @@ public class BitmapCompressor {
         BinaryStdOut.write(count, optimalBits);
         BinaryStdOut.close();
     }
+
 
     /**
      * Reads a sequence of bits from standard input, decodes it,
