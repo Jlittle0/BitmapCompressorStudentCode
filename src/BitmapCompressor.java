@@ -52,25 +52,26 @@ public class BitmapCompressor {
             if (currentBit == currentNum && count < maxLength) {
                 count++;
             } else {
-                // If the above conditions aren't met, write out current run and reset count
+                // If the above conditions aren't met, write out current run
                 BinaryStdOut.write(count, optimalBits);
-                count = 0;
                 // If current run stopped because of a mismatch, change currentNum to 0 or 1;
                 if (currentBit != currentNum) {
                     currentNum = (currentNum + 1) % 2;
-                    count++;
                 }
                 // If the current run stopped because the max length was reached, don't swap
                 // and instead write out 8 blank bits of 0s.
-                if (currentBit == currentNum && count == maxLength)
+                if (currentBit == currentNum && count == maxLength) {
                     BinaryStdOut.write(0, optimalBits);
+                }
+                // Set count to 1 bc start of new run
+                count = 1;
             }
         }
-        // Write out the remaining bits
-        BinaryStdOut.write(count, optimalBits);
+        // Write out the remaining bits as long as there are any remaining
+        if (count != 0)
+            BinaryStdOut.write(count, optimalBits);
         BinaryStdOut.close();
     }
-
 
     /**
      * Reads a sequence of bits from standard input, decodes it,
